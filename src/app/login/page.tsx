@@ -1,11 +1,19 @@
+'use client';
+
+import { loginAction } from '@/actions/auth';
 import Link from 'next/link';
+import { useActionState } from 'react';
 
 export default function LoginPage() {
+  const [state, formAction, isPending] = useActionState(loginAction, {
+    error: null,
+  });
+
   return (
     <div className='container' style={{ maxWidth: '400px', marginTop: '50px' }}>
       <div className='card'>
         <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>ログイン</h2>
-        <form>
+        <form action={formAction}>
           <div className='form-group'>
             <label className='form-label' htmlFor='email'>
               メールアドレス
@@ -32,11 +40,12 @@ export default function LoginPage() {
               required
             />
           </div>
-          {/* {error && <p className='error-message'>{error}</p>} */}
+          {state.error && <p className='error-message'>{state.error}</p>}
           <button
             type='submit'
             className='btn'
             style={{ width: '100%', marginBottom: '15px' }}
+            disabled={isPending}
           >
             ログイン
           </button>
@@ -44,7 +53,7 @@ export default function LoginPage() {
         <p style={{ textAlign: 'center', fontSize: '14px' }}>
           アカウントをお持ちでないですか？
           <br />
-          <Link href='#' style={{ color: '#0070f3' }}>
+          <Link href='/signup' style={{ color: '#0070f3' }}>
             新規登録はこちら
           </Link>
         </p>

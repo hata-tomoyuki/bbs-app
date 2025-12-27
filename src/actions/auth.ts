@@ -4,7 +4,11 @@ import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import { User } from '@/entities/User';
 import { getRepository } from '@/utils/data-source';
-import { createSession, deleteSession } from '@/utils/session';
+import { createSession } from '@/utils/session';
+
+export type AuthFormState = {
+  error: string | null;
+};
 
 export async function signup(formData: FormData) {
 
@@ -34,10 +38,10 @@ export async function signup(formData: FormData) {
             email,
             password: hashedPassword,
         });
-        console.log(await userRepository.save(newUser))
 
-        await userRepository.save(newUser);
+        const savedUser = await userRepository.save(newUser);
 
+        await createSession(savedUser.id.toString());
     } catch (e) {
         console.error(e);
         return { error: 'ユーザー登録中にエラーが発生しました' };
@@ -45,24 +49,45 @@ export async function signup(formData: FormData) {
     redirect('/');
 }
 
-// export async function login(formData: FormData) {
-//   try {
-//     const userRepository = await getRepository(User);
-//     const user = await userRepository.findOneBy({ email });
+export async function login(formData: FormData) {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
-//     if (!user) {
-//       return { error: 'メールアドレスまたはパスワードが正しくありません' };
-//     }
+    try {
+        const userRepository = await getRepository(User);
+        const user = await userRepository.findOneBy({ email });
 
-//     const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!user) {
+            return { error: 'メールアドレスまたはパスワードが正しくありません' };
+        }
 
-//     if (!passwordMatch) {
-//       return { error: 'メールアドレスまたはパスワードが正しくありません' };
-//     }
+        const passwordMatch = await bcrypt.compare(password, user.password);
 
-//     await createSession(user.id.toString());
-//   } catch (e) {
-//     console.error(e);
-//     return { error: 'ログイン中にエラーが発生しました' };
-//   }
-// }
+        if (!passwordMatch) {
+            return { error: 'メールアドレスまたはパスワードが正しくありません' };
+        }
+
+        await createSession(user.id.toString());
+    } catch (e) {
+        console.error(e);
+        return { error: 'ログイン中にエラーが発生しました' };
+    }
+
+    redirect('/');
+}
+
+export async function signupAction(
+  _prevState: AuthFormState,
+  formData: FormData
+): Promise<AuthFormState> {
+  const result = await signup(formData);
+  return result && 'error' in result ? { error: result.error } : { error: null };
+}
+
+export async function loginAction(
+  _prevState: AuthFormState,
+  formData: FormData
+): Promise<AuthFormState> {
+  const result = await login(formData);
+  return result && 'error' in result ? { error: result.error } : { error: null };
+}

@@ -1,21 +1,13 @@
 'use client';
 
-import { signup } from '@/actions/auth';
+import { signupAction } from '@/actions/auth';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useActionState } from 'react';
 
 export default function SignupPage() {
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (formData: FormData) => {
-    setError(null);
-
-    const result = await signup(formData);
-
-    if (result && result.error) {
-      setError(result.error);
-    }
-  }
+  const [state, formAction, isPending] = useActionState(signupAction, {
+    error: null,
+  });
 
   return (
     <div className='container' style={{ maxWidth: '400px', marginTop: '50px' }}>
@@ -23,7 +15,7 @@ export default function SignupPage() {
         <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>
           アカウント登録
         </h2>
-        <form action={handleSubmit}>
+        <form action={formAction}>
           <div className='form-group'>
             <label className='form-label' htmlFor='username'>
               ユーザー名
@@ -63,11 +55,12 @@ export default function SignupPage() {
               required
             />
           </div>
-          {error && <p className='error-message'>{error}</p>}
+          {state.error && <p className='error-message'>{state.error}</p>}
           <button
             type='submit'
             className='btn'
             style={{ width: '100%', marginBottom: '15px' }}
+            disabled={isPending}
           >
             登録する
           </button>
