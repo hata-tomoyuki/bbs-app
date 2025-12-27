@@ -14,7 +14,7 @@ export class Post {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column('varchar')
   title!: string;
 
   @Column('text')
@@ -30,6 +30,6 @@ export class Post {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @Column()
+  @Column('integer')
   userId!: number;
 }

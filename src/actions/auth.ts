@@ -1,37 +1,49 @@
-// 'use server';
+'use server';
 
-// import { redirect } from 'next/navigation';
-// import bcrypt from 'bcryptjs';
-// import { User } from '@/entities/User';
-// import { getRepository } from '@/utils/data-source';
-// import { createSession, deleteSession } from '@/utils/session';
+import { redirect } from 'next/navigation';
+import bcrypt from 'bcryptjs';
+import { User } from '@/entities/User';
+import { getRepository } from '@/utils/data-source';
+import { createSession, deleteSession } from '@/utils/session';
 
-// export async function signup(formData: FormData) {
-//   try {
-//     const userRepository = await getRepository(User);
+export async function signup(formData: FormData) {
 
-//     // メールアドレスの重複チェック
-//     const existingUser = await userRepository.findOneBy({ email });
-//     if (existingUser) {
-//       return { error: 'このメールアドレスは既に使用されています' };
-//     }
+    const userName = formData.get('username') as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
-//     // パスワードのハッシュ化
-//     const hashedPassword = await bcrypt.hash(password, 10);
+    if (!userName || !email || !password) {
+        return { error: 'すべてのフィールドを入力してください' };
+    }
 
-//     // ユーザー作成
-//     const newUser = userRepository.create({
-//       userName,
-//       email,
-//       password: hashedPassword,
-//     });
+    try {
+        const userRepository = await getRepository(User);
 
-//     await userRepository.save(newUser);
-//   } catch (e) {
-//     console.error(e);
-//     return { error: 'ユーザー登録中にエラーが発生しました' };
-//   }
-// }
+        // メールアドレスの重複チェック
+        const existingUser = await userRepository.findOneBy({ email });
+        if (existingUser) {
+            return { error: 'このメールアドレスは既に使用されています' };
+        }
+
+        // パスワードのハッシュ化
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // ユーザー作成
+        const newUser = userRepository.create({
+            userName,
+            email,
+            password: hashedPassword,
+        });
+        console.log(await userRepository.save(newUser))
+
+        await userRepository.save(newUser);
+
+    } catch (e) {
+        console.error(e);
+        return { error: 'ユーザー登録中にエラーが発生しました' };
+    }
+    redirect('/');
+}
 
 // export async function login(formData: FormData) {
 //   try {
