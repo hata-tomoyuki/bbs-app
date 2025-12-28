@@ -5,9 +5,10 @@ import { getRepository } from '@/utils/data-source';
 import { Post } from '@/entities/Post';
 import { verifySession } from '@/utils/session';
 import { User } from '@/entities/User';
+import { cacheTag, revalidateTag } from 'next/cache';
 
 export type PostFormState = {
-  error: string | null;
+    error: string | null;
 };
 
 export async function createPost(formData: FormData) {
@@ -44,35 +45,39 @@ export async function createPost(formData: FormData) {
         console.error(e);
         return { error: '投稿の作成中にエラーが発生しました' };
     }
+    revalidateTag('posts', 'max');
     redirect('/');
 }
 
 export async function createPostAction(
-  _prevState: PostFormState,
-  formData: FormData
+    _prevState: PostFormState,
+    formData: FormData
 ): Promise<PostFormState> {
-  const result = await createPost(formData);
-  return result && 'error' in result ? { error: result.error } : { error: null };
+    const result = await createPost(formData);
+    return result && 'error' in result ? { error: result.error } : { error: null };
 }
 
-// export async function getPosts() {
-//   const postRepository = await getRepository(Post);
+export async function getPosts() {
+    'use cache';
+    cacheTag('posts');
 
-//   // 投稿一覧を取得（作成日時の降順）
-//   const posts = await postRepository.find({
-//     relations: {
-//       user: true,
-//     },
-//     order: {
-//       createdAt: 'DESC',
-//     },
-//   });
+    const postRepository = await getRepository(Post);
 
-//   return posts.map((post) => ({
-//     ...post,
-//     user: { ...post.user },
-//   }));
-// }
+    // 投稿一覧を取得（作成日時の降順）
+    const posts = await postRepository.find({
+        relations: {
+            user: true,
+        },
+        order: {
+            createdAt: 'DESC',
+        },
+    });
+
+    return posts.map((post) => ({
+        ...post,
+        user: { ...post.user },
+    }));
+}
 
 // export async function getPost(id: number) {
 //   const postRepository = await getRepository(Post);
