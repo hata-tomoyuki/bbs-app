@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import { User } from '@/entities/User';
 import { getRepository } from '@/utils/data-source';
-import { createSession } from '@/utils/session';
+import { createSession, deleteSession } from '@/utils/session';
 
 export type AuthFormState = {
   error: string | null;
@@ -74,6 +74,11 @@ export async function login(formData: FormData) {
     }
 
     redirect('/');
+}
+
+export async function logout() {
+    await deleteSession();
+    redirect('/login');
 }
 
 export async function signupAction(
