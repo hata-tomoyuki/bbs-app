@@ -5,7 +5,7 @@ import { getRepository } from '@/utils/data-source';
 import { Post } from '@/entities/Post';
 import { verifySession } from '@/utils/session';
 import { User } from '@/entities/User';
-import { cacheTag, revalidateTag } from 'next/cache';
+import { cacheTag, updateTag } from 'next/cache';
 
 export type PostFormState = {
     error: string | null;
@@ -45,7 +45,7 @@ export async function createPost(formData: FormData) {
         console.error(e);
         return { error: '投稿の作成中にエラーが発生しました' };
     }
-    revalidateTag('posts', 'max');
+    updateTag('posts');
     redirect('/');
 }
 
@@ -123,8 +123,8 @@ export async function deletePost(id: number) {
 
     await postRepository.remove(post);
 
-    revalidateTag('posts', 'max');
-    revalidateTag(`post-${id}`, 'max');
+    updateTag('posts');
+    updateTag(`post-${id}`);
 
     redirect('/');
 }
