@@ -1,9 +1,18 @@
+'use client';
+
+import { createPostAction } from '@/actions/post';
+import { useActionState } from 'react';
+
 export default function CreatePostPage() {
+  const [state, formAction, isPending] = useActionState(createPostAction, {
+    error: null,
+  });
+
   return (
     <div className='container' style={{ maxWidth: '600px', marginTop: '30px' }}>
       <div className='card'>
         <h2 style={{ marginBottom: '20px' }}>新規投稿</h2>
-        <form>
+        <form action={formAction}>
           <div className='form-group'>
             <label className='form-label' htmlFor='title'>
               タイトル
@@ -27,8 +36,8 @@ export default function CreatePostPage() {
               placeholder='本文を入力'
             ></textarea>
           </div>
-          {/* {error && <p className='error-message'>{error}</p>} */}
-          <button type='submit' className='btn'>
+          {state.error && <p className='error-message'>{state.error}</p>}
+          <button type='submit' className='btn' disabled={isPending}>
             投稿する
           </button>
         </form>

@@ -1,35 +1,59 @@
-// 'use server';
+'use server';
 
-// import { redirect } from 'next/navigation';
-// import { revalidateTag, cacheTag } from 'next/cache';
-// import { AppDataSource, getRepository } from '@/utils/data-source';
-// import { Post } from '@/entities/Post';
-// import { verifySession } from '@/utils/session';
-// import { User } from '@/entities/User';
+import { redirect } from 'next/navigation';
+import { getRepository } from '@/utils/data-source';
+import { Post } from '@/entities/Post';
+import { verifySession } from '@/utils/session';
+import { User } from '@/entities/User';
 
-// export async function createPost(formData: FormData) {
-//   try {
-//     const postRepository = await getRepository(Post);
-//     const userRepository = await getRepository(User);
+export type PostFormState = {
+  error: string | null;
+};
 
-//     // ユーザーの取得（リレーションのため）
-//     const user = await userRepository.findOneBy({ id: Number(session.userId) });
-//     if (!user) {
-//       return { error: 'ユーザーが見つかりません' };
-//     }
+export async function createPost(formData: FormData) {
+    const title = formData.get('title') as string;
+    const content = formData.get('content') as string;
 
-//     const newPost = postRepository.create({
-//       title,
-//       content,
-//       user: user, // ユーザーオブジェクトをセット
-//     });
+    if (!title || !content) {
+        return { error: 'タイトルと内容は必須です' };
+    }
 
-//     await postRepository.save(newPost);
-//   } catch (e) {
-//     console.error(e);
-//     return { error: '投稿の作成中にエラーが発生しました' };
-//   }
-// }
+    try {
+        const session = await verifySession();
+        if (!session || !session.userId) {
+            return { error: 'ログインが必要です' };
+        }
+
+        const postRepository = await getRepository(Post);
+        const userRepository = await getRepository(User);
+
+        // ユーザーの取得（リレーションのため）
+        const user = await userRepository.findOneBy({ id: Number(session.userId) });
+        if (!user) {
+            return { error: 'ユーザーが見つかりません' };
+        }
+
+        const newPost = postRepository.create({
+            title,
+            content,
+            user: user, // ユーザーオブジェクトをセット
+        });
+
+        await postRepository.save(newPost);
+    } catch (e) {
+        console.error(e);
+        return { error: '投稿の作成中にエラーが発生しました' };
+    }
+    redirect('/');
+}
+
+export async function createPostAction(
+  _prevState: PostFormState,
+  formData: FormData
+): Promise<PostFormState> {
+  const result = await createPost(formData);
+  return result && 'error' in result ? { error: result.error } : { error: null };
+}
 
 // export async function getPosts() {
 //   const postRepository = await getRepository(Post);
